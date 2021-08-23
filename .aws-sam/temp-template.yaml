@@ -1,0 +1,9 @@
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 33
+      MemorySize: 128
+      Handler: main
+      CodeUri: /Users/MasatoraAtarashi/go/src/Shiori-backend-prototype
+      Runtime: go1.x
