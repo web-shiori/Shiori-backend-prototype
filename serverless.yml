@@ -19,7 +19,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}, arn:aws:cognito-idp:*:*:userpool/*"
 
 functions:
   alive:
@@ -32,6 +32,10 @@ functions:
           path: alive
           method: get
           cors: true
+          authorizer:
+            name: alive
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
 
   post:
     handler: bin/post

@@ -150,7 +150,7 @@
                     "dynamodb:UpdateItem",
                     "dynamodb:DeleteItem"
                   ],
-                  "Resource": "arn:aws:dynamodb:ap-northeast-1:*:table/web-shiori-backend-prototype-dev"
+                  "Resource": "arn:aws:dynamodb:ap-northeast-1:*:table/web-shiori-backend-prototype-dev, arn:aws:cognito-idp:*:*:userpool/*"
                 }
               ]
             }
@@ -179,7 +179,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/web-shiori-backend-prototype/dev/1629765795760-2021-08-24T00:43:15.760Z/web-shiori-backend-prototype.zip"
+          "S3Key": "serverless/web-shiori-backend-prototype/dev/1629780702511-2021-08-24T04:51:42.511Z/web-shiori-backend-prototype.zip"
         },
         "Handler": "bin/alive",
         "Runtime": "go1.x",
@@ -209,7 +209,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/web-shiori-backend-prototype/dev/1629765795760-2021-08-24T00:43:15.760Z/web-shiori-backend-prototype.zip"
+          "S3Key": "serverless/web-shiori-backend-prototype/dev/1629780702511-2021-08-24T04:51:42.511Z/web-shiori-backend-prototype.zip"
         },
         "Handler": "bin/post",
         "Runtime": "go1.x",
@@ -232,24 +232,24 @@
         "PostLogGroup"
       ]
     },
-    "PostLambdaVersion0a8zEySttVEl43zK2KaDtiuXcR23bZZ3LKWNHjbYo": {
-      "Type": "AWS::Lambda::Version",
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "FunctionName": {
-          "Ref": "PostLambdaFunction"
-        },
-        "CodeSha256": "rrZjOxLqsaRbyLJpV5HOpbO4WJ00CPfyIbG9plOOyYY="
-      }
-    },
-    "AliveLambdaVersionGhGTg5QkGeG8tCLzOrTKHMFL5Bzdt986X7ZHK1ouik": {
+    "AliveLambdaVersionVRAlbwfq3wmNKuoXhYTXl9pciNssboHlEd0T6PJ0t58": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AliveLambdaFunction"
         },
-        "CodeSha256": "rrZjOxLqsaRbyLJpV5HOpbO4WJ00CPfyIbG9plOOyYY="
+        "CodeSha256": "xgkXIkA7uHQi7OPV4F5HuhOfn7PDc1KEFpcenAnWcCs="
+      }
+    },
+    "PostLambdaVersion8n03Y2lMMpxVWuvuYNbGPlFwDRzvpJMICfaTM3vk": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "PostLambdaFunction"
+        },
+        "CodeSha256": "xgkXIkA7uHQi7OPV4F5HuhOfn7PDc1KEFpcenAnWcCs="
       }
     },
     "ApiGatewayRestApi": {
@@ -336,7 +336,10 @@
           "Ref": "ApiGatewayRestApi"
         },
         "ApiKeyRequired": false,
-        "AuthorizationType": "NONE",
+        "AuthorizationType": "CUSTOM",
+        "AuthorizerId": {
+          "Ref": "AliveApiGatewayAuthorizer"
+        },
         "Integration": {
           "IntegrationHttpMethod": "POST",
           "Type": "AWS_PROXY",
@@ -366,9 +369,7 @@
         },
         "MethodResponses": []
       },
-      "DependsOn": [
-        "AliveLambdaPermissionApiGateway"
-      ]
+      "DependsOn": "AliveApiGatewayAuthorizer"
     },
     "ApiGatewayMethodAlivePost": {
       "Type": "AWS::ApiGateway::Method",
@@ -416,7 +417,42 @@
         "PostLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1629765777966": {
+    "AliveApiGatewayAuthorizer": {
+      "Type": "AWS::ApiGateway::Authorizer",
+      "Properties": {
+        "AuthorizerResultTtlInSeconds": 0,
+        "IdentitySource": "method.request.header.Authorization",
+        "Name": "alive",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "AuthorizerUri": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":apigateway:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":lambda:path/2015-03-31/functions/",
+              {
+                "Fn::GetAtt": [
+                  "AliveLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "/invocations"
+            ]
+          ]
+        },
+        "Type": "TOKEN"
+      }
+    },
+    "ApiGatewayDeployment1629780688436": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -537,22 +573,22 @@
         "Name": "sls-web-shiori-backend-prototype-dev-ServerlessDeploymentBucketName"
       }
     },
-    "PostLambdaFunctionQualifiedArn": {
-      "Description": "Current Lambda function version",
-      "Value": {
-        "Ref": "PostLambdaVersion0a8zEySttVEl43zK2KaDtiuXcR23bZZ3LKWNHjbYo"
-      },
-      "Export": {
-        "Name": "sls-web-shiori-backend-prototype-dev-PostLambdaFunctionQualifiedArn"
-      }
-    },
     "AliveLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AliveLambdaVersionGhGTg5QkGeG8tCLzOrTKHMFL5Bzdt986X7ZHK1ouik"
+        "Ref": "AliveLambdaVersionVRAlbwfq3wmNKuoXhYTXl9pciNssboHlEd0T6PJ0t58"
       },
       "Export": {
         "Name": "sls-web-shiori-backend-prototype-dev-AliveLambdaFunctionQualifiedArn"
+      }
+    },
+    "PostLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "PostLambdaVersion8n03Y2lMMpxVWuvuYNbGPlFwDRzvpJMICfaTM3vk"
+      },
+      "Export": {
+        "Name": "sls-web-shiori-backend-prototype-dev-PostLambdaFunctionQualifiedArn"
       }
     },
     "ServiceEndpoint": {
