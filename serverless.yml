@@ -34,10 +34,6 @@ functions:
           path: alive
           method: get
           cors: true
-          authorizer:
-            name: alive
-            resultTtlInSeconds: 0
-            identitySource: method.request.header.Authorization
 
   post:
     handler: bin/post
@@ -49,6 +45,18 @@ functions:
           path: post
           method: post
           cors: true
+
+  list:
+    handler: bin/list
+    package:
+      include:
+        - ./bin/list
+    events:
+      - http:
+          path: list
+          method: get
+          cors: true
+
 
 resources:
   Resources:

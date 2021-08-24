@@ -15,8 +15,9 @@ import (
 )
 
 type Content struct {
-	Id    string `json:"id,omitempty"`
-	Title string `json:"title"`
+	Id     string `json:"id,omitempty"`
+	UserID string `json:"user_id"`
+	Title  string `json:"title"`
 }
 
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -33,7 +34,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	contentUuid := uuid.New().String()
 
 	fmt.Println("Generated new content uuid:", contentUuid)
-	// Unmarshal to Item to access object properties
+	// Unmarshal to Content to access object properties
 	contentString := request.Body
 	contentStruct := Content{}
 	json.Unmarshal([]byte(contentString), &contentStruct)
@@ -44,8 +45,9 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	// Create new content of type content
 	content := Content{
-		Id:    contentUuid,
-		Title: contentStruct.Title,
+		Id:     contentUuid,
+		UserID: contentStruct.UserID,
+		Title:  contentStruct.Title,
 	}
 
 	fmt.Println("content:", content)
