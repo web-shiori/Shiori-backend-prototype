@@ -44,7 +44,7 @@ functions:
         - ./bin/post
     events:
       - http:
-          path: alive
+          path: post
           method: post
           cors: true
 

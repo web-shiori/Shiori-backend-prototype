@@ -29,11 +29,10 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// Create DynamoDB client
 	svc := dynamodb.New(sess)
 
-	// New uuid for item id
+	// New uuid for content id
 	contentUuid := uuid.New().String()
 
-	fmt.Println("Generated new item uuid:", contentUuid)
-
+	fmt.Println("Generated new content uuid:", contentUuid)
 	// Unmarshal to Item to access object properties
 	contentString := request.Body
 	contentStruct := Content{}
@@ -43,23 +42,25 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return events.APIGatewayProxyResponse{StatusCode: 400}, nil
 	}
 
-	// Create new item of type item
-	item := Content{
+	// Create new content of type content
+	content := Content{
 		Id:    contentUuid,
 		Title: contentStruct.Title,
 	}
 
-	// Marshal to dynamobb item
-	av, err := dynamodbattribute.MarshalMap(item)
+	fmt.Println("content:", content)
+
+	// Marshal to dynamobb content
+	av, err := dynamodbattribute.MarshalMap(content)
 	if err != nil {
-		fmt.Println("Error marshalling item: ", err.Error())
+		fmt.Println("Error marshalling content: ", err.Error())
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
 
 	tableName := os.Getenv("DYNAMODB_TABLE")
 
-	// Build put item input
-	fmt.Println("Putting item: %v", av)
+	// Build put content input
+	fmt.Println("Putting content: %v", av)
 	input := &dynamodb.PutItemInput{
 		Item:      av,
 		TableName: aws.String(tableName),
@@ -74,10 +75,10 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return events.APIGatewayProxyResponse{StatusCode: 500}, nil
 	}
 
-	// Marshal item to return
-	itemMarshalled, err := json.Marshal(item)
+	// Marshal content to return
+	itemMarshalled, err := json.Marshal(content)
 
-	fmt.Println("Returning item: ", string(itemMarshalled))
+	fmt.Println("Returning content: ", string(itemMarshalled))
 
 	//Returning response with AWS Lambda Proxy Response
 	return events.APIGatewayProxyResponse{Body: string(itemMarshalled), StatusCode: 200}, nil
