@@ -33,6 +33,17 @@ functions:
           method: get
           cors: true
 
+  post:
+    handler: bin/post
+    package:
+      include:
+        - ./bin/post
+    events:
+      - http:
+          path: alive
+          method: post
+          cors: true
+
 resources:
   Resources:
     ContentDynamoDbTable:

@@ -2,6 +2,7 @@
 
 build:
 	env GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/alive src/alive.go
+	env GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/post src/post.go
 
 clean:
 	rm -rf ./bin ./vendor Gopkg.lock
@@ -11,3 +12,4 @@ deploy: clean build
 
 format:
 	gofmt -w src/alive.go
+	gofmt -w src/post.go
