@@ -10,6 +10,9 @@ clean:
 deploy: clean build
 	sls deploy --verbose
 
+delete:
+	sls remove
+
 format:
 	gofmt -w src/alive.go
 	gofmt -w src/post.go
