@@ -106,6 +106,12 @@
               "LogGroupName": "/aws/lambda/web-shiori-backend-prototype-dev-alive"
             }
           },
+          "PostLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/web-shiori-backend-prototype-dev-post"
+            }
+          },
           "IamRoleLambdaExecution": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -193,7 +199,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/web-shiori-backend-prototype/dev/1629759663619-2021-08-23T23:01:03.619Z/web-shiori-backend-prototype.zip"
+                "S3Key": "serverless/web-shiori-backend-prototype/dev/1629765795760-2021-08-24T00:43:15.760Z/web-shiori-backend-prototype.zip"
               },
               "Handler": "bin/alive",
               "Runtime": "go1.x",
@@ -216,14 +222,54 @@
               "AliveLogGroup"
             ]
           },
-          "AliveLambdaVersionnjoqK1G6jFOn5Lz5zSehZ8wr3P37yDud1ZluuXaN3g": {
+          "PostLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/web-shiori-backend-prototype/dev/1629765795760-2021-08-24T00:43:15.760Z/web-shiori-backend-prototype.zip"
+              },
+              "Handler": "bin/post",
+              "Runtime": "go1.x",
+              "FunctionName": "web-shiori-backend-prototype-dev-post",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "DYNAMODB_TABLE": "web-shiori-backend-prototype-dev"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "PostLogGroup"
+            ]
+          },
+          "PostLambdaVersion0a8zEySttVEl43zK2KaDtiuXcR23bZZ3LKWNHjbYo": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "PostLambdaFunction"
+              },
+              "CodeSha256": "rrZjOxLqsaRbyLJpV5HOpbO4WJ00CPfyIbG9plOOyYY="
+            }
+          },
+          "AliveLambdaVersionGhGTg5QkGeG8tCLzOrTKHMFL5Bzdt986X7ZHK1ouik": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AliveLambdaFunction"
               },
-              "CodeSha256": "zz2rGGATYAuxxOACg2Ts+p+Cz/vMVxvQJTuechMT4pE="
+              "CodeSha256": "rrZjOxLqsaRbyLJpV5HOpbO4WJ00CPfyIbG9plOOyYY="
             }
           },
           "ApiGatewayRestApi": {
@@ -282,7 +328,7 @@
                     "ResponseParameters": {
                       "method.response.header.Access-Control-Allow-Origin": "'*'",
                       "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST,GET'"
                     },
                     "ResponseTemplates": {
                       "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
@@ -344,7 +390,53 @@
               "AliveLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1629759661793": {
+          "ApiGatewayMethodAlivePost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceAlive"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "PostLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "PostLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1629765777966": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -354,7 +446,8 @@
             },
             "DependsOn": [
               "ApiGatewayMethodAliveOptions",
-              "ApiGatewayMethodAliveGet"
+              "ApiGatewayMethodAliveGet",
+              "ApiGatewayMethodAlivePost"
             ]
           },
           "AliveLambdaPermissionApiGateway": {
@@ -363,6 +456,43 @@
               "FunctionName": {
                 "Fn::GetAtt": [
                   "AliveLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "PostLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "PostLambdaFunction",
                   "Arn"
                 ]
               },
@@ -427,10 +557,19 @@
               "Name": "sls-web-shiori-backend-prototype-dev-ServerlessDeploymentBucketName"
             }
           },
+          "PostLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "PostLambdaVersion0a8zEySttVEl43zK2KaDtiuXcR23bZZ3LKWNHjbYo"
+            },
+            "Export": {
+              "Name": "sls-web-shiori-backend-prototype-dev-PostLambdaFunctionQualifiedArn"
+            }
+          },
           "AliveLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AliveLambdaVersionnjoqK1G6jFOn5Lz5zSehZ8wr3P37yDud1ZluuXaN3g"
+              "Ref": "AliveLambdaVersionGhGTg5QkGeG8tCLzOrTKHMFL5Bzdt986X7ZHK1ouik"
             },
             "Export": {
               "Name": "sls-web-shiori-backend-prototype-dev-AliveLambdaFunctionQualifiedArn"
@@ -548,6 +687,10 @@
       },
       "vpc": {}
     },
+    "plugins": [
+      "serverless-dynamodb-local",
+      "serverless-offline"
+    ],
     "pluginsData": {},
     "functions": {
       "alive": {
@@ -590,7 +733,49 @@
         "timeout": 6,
         "runtime": "go1.x",
         "vpc": {},
-        "versionLogicalId": "AliveLambdaVersionnjoqK1G6jFOn5Lz5zSehZ8wr3P37yDud1ZluuXaN3g"
+        "versionLogicalId": "AliveLambdaVersionGhGTg5QkGeG8tCLzOrTKHMFL5Bzdt986X7ZHK1ouik"
+      },
+      "post": {
+        "handler": "bin/post",
+        "package": {
+          "include": [
+            "./bin/post"
+          ]
+        },
+        "events": [
+          {
+            "http": {
+              "path": "alive",
+              "method": "post",
+              "cors": {
+                "origins": [
+                  "*"
+                ],
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "POST"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent"
+                ],
+                "allowCredentials": false
+              },
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "web-shiori-backend-prototype-dev-post",
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "go1.x",
+        "vpc": {},
+        "versionLogicalId": "PostLambdaVersion0a8zEySttVEl43zK2KaDtiuXcR23bZZ3LKWNHjbYo"
       }
     },
     "resources": {
@@ -628,6 +813,9 @@
       "service": {
         "$ref": "$[\"service\"][\"serviceObject\"]"
       },
+      "plugins": {
+        "$ref": "$[\"service\"][\"plugins\"]"
+      },
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
       },
@@ -644,7 +832,7 @@
     "artifact": "/Users/MasatoraAtarashi/go/src/Shiori-backend-prototype/.serverless/web-shiori-backend-prototype.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/web-shiori-backend-prototype/dev/1629759663619-2021-08-23T23:01:03.619Z",
+    "artifactDirectoryName": "serverless/web-shiori-backend-prototype/dev/1629765795760-2021-08-24T00:43:15.760Z",
     "artifact": "web-shiori-backend-prototype.zip"
   }
 }
